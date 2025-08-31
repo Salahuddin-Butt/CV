@@ -1,9 +1,11 @@
 'use strict';
 
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("DOM loaded, initializing navigation...");
 
-
-// element toggle function
-const elementToggleFunc = function (elem) { elem.classList.toggle("active"); }
+  // element toggle function
+  const elementToggleFunc = function (elem) { elem.classList.toggle("active"); }
 
 
 
@@ -12,7 +14,9 @@ const sidebar = document.querySelector("[data-sidebar]");
 const sidebarBtn = document.querySelector("[data-sidebar-btn]");
 
 // sidebar toggle functionality for mobile
-sidebarBtn.addEventListener("click", function () { elementToggleFunc(sidebar); });
+if (sidebarBtn && sidebar) {
+  sidebarBtn.addEventListener("click", function () { elementToggleFunc(sidebar); });
+}
 
 
 
@@ -34,24 +38,30 @@ const testimonialsModalFunc = function () {
 }
 
 // add click event to all modal items
-for (let i = 0; i < testimonialsItem.length; i++) {
+if (testimonialsItem.length > 0 && modalImg && modalTitle && modalText) {
+  for (let i = 0; i < testimonialsItem.length; i++) {
 
-  testimonialsItem[i].addEventListener("click", function () {
+    testimonialsItem[i].addEventListener("click", function () {
 
-    modalImg.src = this.querySelector("[data-testimonials-avatar]").src;
-    modalImg.alt = this.querySelector("[data-testimonials-avatar]").alt;
-    modalTitle.innerHTML = this.querySelector("[data-testimonials-title]").innerHTML;
-    modalText.innerHTML = this.querySelector("[data-testimonials-text]").innerHTML;
+      modalImg.src = this.querySelector("[data-testimonials-avatar]").src;
+      modalImg.alt = this.querySelector("[data-testimonials-avatar]").alt;
+      modalTitle.innerHTML = this.querySelector("[data-testimonials-title]").innerHTML;
+      modalText.innerHTML = this.querySelector("[data-testimonials-text]").innerHTML;
 
-    testimonialsModalFunc();
+      testimonialsModalFunc();
 
-  });
+    });
 
+  }
 }
 
 // add click event to modal close button
-modalCloseBtn.addEventListener("click", testimonialsModalFunc);
-overlay.addEventListener("click", testimonialsModalFunc);
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener("click", testimonialsModalFunc);
+}
+if (overlay) {
+  overlay.addEventListener("click", testimonialsModalFunc);
+}
 
 
 
@@ -61,18 +71,22 @@ const selectItems = document.querySelectorAll("[data-select-item]");
 const selectValue = document.querySelector("[data-selecct-value]");
 const filterBtn = document.querySelectorAll("[data-filter-btn]");
 
-select.addEventListener("click", function () { elementToggleFunc(this); });
+if (select) {
+  select.addEventListener("click", function () { elementToggleFunc(this); });
+}
 
 // add event in all select items
-for (let i = 0; i < selectItems.length; i++) {
-  selectItems[i].addEventListener("click", function () {
+if (selectItems.length > 0 && selectValue) {
+  for (let i = 0; i < selectItems.length; i++) {
+    selectItems[i].addEventListener("click", function () {
 
-    let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
-    elementToggleFunc(select);
-    filterFunc(selectedValue);
+      let selectedValue = this.innerText.toLowerCase();
+      selectValue.innerText = this.innerText;
+      if (select) elementToggleFunc(select);
+      filterFunc(selectedValue);
 
-  });
+    });
+  }
 }
 
 // filter variables
@@ -95,22 +109,24 @@ const filterFunc = function (selectedValue) {
 }
 
 // add event in all filter button items for large screen
-let lastClickedBtn = filterBtn[0];
+if (filterBtn.length > 0 && selectValue) {
+  let lastClickedBtn = filterBtn[0];
 
-for (let i = 0; i < filterBtn.length; i++) {
+  for (let i = 0; i < filterBtn.length; i++) {
 
-  filterBtn[i].addEventListener("click", function () {
+    filterBtn[i].addEventListener("click", function () {
 
-    let selectedValue = this.innerText.toLowerCase();
-    selectValue.innerText = this.innerText;
-    filterFunc(selectedValue);
+      let selectedValue = this.innerText.toLowerCase();
+      selectValue.innerText = this.innerText;
+      filterFunc(selectedValue);
 
-    lastClickedBtn.classList.remove("active");
-    this.classList.add("active");
-    lastClickedBtn = this;
+      lastClickedBtn.classList.remove("active");
+      this.classList.add("active");
+      lastClickedBtn = this;
 
-  });
+    });
 
+  }
 }
 
 
@@ -121,16 +137,63 @@ const formInputs = document.querySelectorAll("[data-form-input]");
 const formBtn = document.querySelector("[data-form-btn]");
 
 // add event to all form input field
-for (let i = 0; i < formInputs.length; i++) {
-  formInputs[i].addEventListener("input", function () {
+if (form && formInputs.length > 0 && formBtn) {
+  for (let i = 0; i < formInputs.length; i++) {
+    formInputs[i].addEventListener("input", function () {
 
-    // check form validation
-    if (form.checkValidity()) {
-      formBtn.removeAttribute("disabled");
-    } else {
-      formBtn.setAttribute("disabled", "");
-    }
+      // check form validation
+      if (form.checkValidity()) {
+        formBtn.removeAttribute("disabled");
+      } else {
+        formBtn.setAttribute("disabled", "");
+      }
 
+    });
+  }
+
+  // Handle form submission
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const statusDiv = document.querySelector(".form-status");
+    const submitBtn = formBtn;
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<ion-icon name="hourglass-outline"></ion-icon><span>Sending...</span>';
+    
+    fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Success
+        statusDiv.style.display = "block";
+        statusDiv.style.backgroundColor = "#4CAF50";
+        statusDiv.style.color = "white";
+        statusDiv.innerHTML = "✅ Message sent successfully! I'll get back to you soon.";
+        form.reset();
+      } else {
+        throw new Error('Network response was not ok');
+      }
+    })
+    .catch(error => {
+      // Error
+      statusDiv.style.display = "block";
+      statusDiv.style.backgroundColor = "#f44336";
+      statusDiv.style.color = "white";
+      statusDiv.innerHTML = "❌ Sorry, there was an error sending your message. Please try again.";
+    })
+    .finally(() => {
+      // Re-enable button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<ion-icon name="paper-plane"></ion-icon><span>Send Message</span>';
+    });
   });
 }
 
@@ -140,20 +203,44 @@ for (let i = 0; i < formInputs.length; i++) {
 const navigationLinks = document.querySelectorAll("[data-nav-link]");
 const pages = document.querySelectorAll("[data-page]");
 
+// Debug: Log what we found
+console.log("Navigation links found:", navigationLinks.length);
+console.log("Pages found:", pages.length);
+
 // add event to all nav link
-for (let i = 0; i < navigationLinks.length; i++) {
-  navigationLinks[i].addEventListener("click", function () {
+if (navigationLinks.length > 0 && pages.length > 0) {
+  for (let i = 0; i < navigationLinks.length; i++) {
+    navigationLinks[i].addEventListener("click", function () {
+      console.log("Nav link clicked:", this.innerHTML);
 
-    for (let i = 0; i < pages.length; i++) {
-      if (this.innerHTML.toLowerCase() === pages[i].dataset.page) {
-        pages[i].classList.add("active");
-        navigationLinks[i].classList.add("active");
-        window.scrollTo(0, 0);
-      } else {
-        pages[i].classList.remove("active");
-        navigationLinks[i].classList.remove("active");
+      // Remove active class from all pages and nav links
+      for (let j = 0; j < pages.length; j++) {
+        pages[j].classList.remove("active");
       }
-    }
+      for (let j = 0; j < navigationLinks.length; j++) {
+        navigationLinks[j].classList.remove("active");
+      }
 
-  });
+      // Add active class to clicked nav link
+      this.classList.add("active");
+
+      // Find and show the corresponding page
+      const targetPage = this.innerHTML.toLowerCase();
+      console.log("Target page:", targetPage);
+      
+      for (let j = 0; j < pages.length; j++) {
+        if (pages[j].dataset.page === targetPage) {
+          pages[j].classList.add("active");
+          console.log("Page activated:", pages[j].dataset.page);
+          break;
+        }
+      }
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+
+    });
+  }
 }
+
+}); // Close DOMContentLoaded function
